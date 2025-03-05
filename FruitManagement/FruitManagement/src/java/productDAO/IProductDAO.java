@@ -18,4 +18,6 @@ public interface IProductDAO {
     public List<Product> selectAllProducts();
     public boolean deleteProduct(int id)throws SQLException;
     public boolean updateProduct(Product pro) throws SQLException;
+    public Product selectProduct(String name);
+    public List<Product> selectProductsByCategory(String category);
 }

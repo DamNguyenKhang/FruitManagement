@@ -5,27 +5,48 @@
 package productDAO;
 
 import dao.DBConnection;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import model.Product;
 
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
  * @author DELL
  */
 public class ProductDAO implements IProductDAO {
 
-    public static final String SELECT_PRODUCT_BY_ID = "SELECT * FROM Products WHERE ProductID = ?";
-    public static final String SELECT_ALL_PRODUCT = "SELECT * FROM Products";
-    public static final String INSERT_PRODUCT = "INSERT INTO Products (Name, Price, Description, ImageURL) VALUES (?, ?, ?, ?)";
-    public static final String DELETE_PRODUCT_BY_ID = "DELETE FROM Products WHERE ProductID = ?";
-    public static final String UPDATE_PRODUCT = "UPDATE Products SET Name = ?, Price = ?, Description = ?, ImageURL = ?, ImportDate = ? WHERE ProductID = ?";
+    public static final String SELECT_PRODUCT_BY_ID =
+            "SELECT * "
+            + "FROM Products "
+            + "WHERE ProductID = ?";
+    public static final String SELECT_ALL_PRODUCT =
+            "SELECT * " +
+            "FROM Products";
+    public static final String INSERT_PRODUCT =
+            "INSERT INTO Products (Name, Price, Description, ImageURL) " +
+            "VALUES (?, ?, ?, ?)";
+    public static final String DELETE_PRODUCT_BY_ID =
+            "DELETE " +
+            "FROM Products " +
+            "WHERE ProductID = ?";
+    public static final String UPDATE_PRODUCT =
+            "UPDATE Products " +
+            "SET Name = ?, Price = ?, Description = ?, ImageURL = ?, ImportDate = ? " +
+            "WHERE ProductID = ?";
+    public static final String SELECT_PRODUCT_BY_NAME =
+            "SELECT * " +
+            "FROM Products " +
+            "WHERE Name = ?";
+    public static final String SELECT_PRODUCT_ID_BY_CATEGORY =
+            "SELECT p.ProductID, p.ProductName" +
+                    "FROM Products p " +
+                    "INNER JOIN ProductsCategories pc " +
+                    "ON p.ProductID = pc.ProductID" +
+                    "INNER JOIN Categories c " +
+                    "ON c.CategoryID = pc.CategoryID" +
+                    "WHERE pc.CategoryName = ?" +
+                    "GROUP BY p.ProductID, p.ProductName";
 
     public void insertProduct(Product pro) throws SQLException {
         String sql = INSERT_PRODUCT;
@@ -93,7 +114,7 @@ public class ProductDAO implements IProductDAO {
         return list;
     }
 
-    public boolean deleteProduct(int id) throws SQLException {
+    public boolean deleteProduct(int id) {
         String sql = DELETE_PRODUCT_BY_ID;
         boolean affectedRows = false;
         try (Connection con = DBConnection.getConnection()) {
@@ -101,7 +122,7 @@ public class ProductDAO implements IProductDAO {
             ptm.setInt(1, id);
             affectedRows = ptm.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new SQLException("Failed to update product: " + e.getMessage());
+            System.out.println("Failed to update product: " + e.getMessage());
         }
         return affectedRows;
     }
@@ -127,6 +148,38 @@ public class ProductDAO implements IProductDAO {
             throw new SQLException("Fail to update product: " + e.getMessage());
         }
         return affectedRows;
+    }
+
+    @Override
+    public Product selectProduct(String name) {
+        Product product;
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ptm = conn.prepareStatement(SELECT_PRODUCT_BY_NAME)) {
+            ptm.setString(1, name);
+            ResultSet rs = ptm.executeQuery();
+            if (rs.next()) {
+                product = new Product(rs.getInt("ProductID"), rs.getString("ProductName"), rs.getString("Description"), rs.getDouble("Price"), rs.getString("ImageURL"), rs.getTimestamp("ImportDate").toLocalDateTime());
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    @Override
+    public List<Product> selectProductsByCategory(String category) {
+        List<Product> list = null;
+        try(Connection conn = DBConnection.getConnection(); PreparedStatement ptm = conn.prepareStatement(SELECT_PRODUCT_ID_BY_CATEGORY)){
+            ptm.setString(1, category);
+            ResultSet rs = ptm.executeQuery();
+            if (rs.next()) {
+                list = new ArrayList<>();
+                Product pro = selectProduct(rs.getInt("ProductID"));
+                list.add(pro);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
     }
 
     public static void main(String[] args) {

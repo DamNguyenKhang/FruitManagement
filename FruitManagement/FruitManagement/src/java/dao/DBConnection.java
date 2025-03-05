@@ -19,7 +19,7 @@ public class DBConnection {
     public static String driverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     public static String dbURL = "jdbc:sqlserver://localhost:1433;databaseName=FruitManagementSystem;encrypt=true;trustServerCertificate=true";
     public static String userDB = "sa";
-    public static String passwordDB = "Khang1234@";
+    public static String passwordDB = "3H452004hh@";
 
     public static Connection getConnection() {
         Connection con = null;
