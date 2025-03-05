@@ -45,6 +45,5 @@ public class ProductService implements IProdcutService {
 
     @Override
     public List<Product> getProductWithSales(String name, String category) {
-        return List.of();
     }
 }
